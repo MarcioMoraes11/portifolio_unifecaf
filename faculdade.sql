@@ -1,20 +1,5 @@
 USE faculdade;
 
-SET FOREIGN_KEY_CHECKS = 0;
-
-drop table if exists endereco;
-drop table if exists aluno;
-drop table if exists curso;
-drop table if exists professor;
-drop table if exists disciplina;
-drop table if exists curso_disciplina;
-drop table if exists sala;
-drop table if exists turma;
-drop table if exists matricula;
-drop table if exists avaliacao;
-drop table if exists nota;
-drop table if exists frequencia;
-
 -- Tabela de Endereços
 CREATE TABLE IF NOT EXISTS endereco (
     id_endereco INT AUTO_INCREMENT PRIMARY KEY,
@@ -160,41 +145,3 @@ CREATE TABLE IF NOT EXISTS frequencia (
 ) ENGINE=InnoDB;
 
 SET FOREIGN_KEY_CHECKS = 1;
-
--- View para histórico escolar
-CREATE OR REPLACE VIEW historico_escolar AS
-SELECT 
-    a.nome AS aluno,
-    d.nome AS disciplina,
-    t.periodo_letivo,
-    AVG(n.valor) AS media_final,
-    m.situacao
-FROM aluno a
-JOIN matricula m ON a.id_aluno = m.id_aluno
-JOIN turma t ON m.id_turma = t.id_turma
-JOIN disciplina d ON t.id_disciplina = d.id_disciplina
-LEFT JOIN avaliacao av ON t.id_turma = av.id_turma
-LEFT JOIN nota n ON m.id_matricula = n.id_matricula AND n.id_avaliacao = av.id_avaliacao
-GROUP BY a.id_aluno, d.id_disciplina, t.id_turma, m.id_matricula;
-
--- View para carga horária de professores
-CREATE OR REPLACE VIEW carga_horaria_professores AS
-SELECT 
-    p.nome AS professor,
-    COUNT(t.id_turma) AS quantidade_turmas,
-    SUM(d.carga_horaria) AS carga_horaria_total
-FROM professor p
-JOIN turma t ON p.id_professor = t.id_professor
-JOIN disciplina d ON t.id_disciplina = d.id_disciplina
-GROUP BY p.id_professor;
-
-start transaction;
-
-INSERT INTO endereco (cep, logradouro, numero, bairro, cidade, estado) 
-VALUES ('01311000', 'Av. Paulista', '1000', 'Bela Vista', 'São Paulo', 'SP');
-
-INSERT INTO aluno (nome, cpf, data_nascimento, email, telefone, id_endereco, data_ingresso) 
-VALUES ('João Silva', '123.456.789-09', '2000-05-15', 'joao.silva@email.com', '(11) 9999-8888', LAST_INSERT_ID(), '2023-01-15');
-
-
-commit;
